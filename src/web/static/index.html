@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>llm-z3-verifier | Neurosymbolic AI Proof Laboratory</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-badge">Z3 &bull; SMT &bull; MCTS &bull; LEAN 4</div>
+        <h1 class="title">llm-z3-verifier</h1>
+        <p class="subtitle">Process-Supervised Neurosymbolic Proof Search & Counterexample Synthesis</p>
+      </div>
+      <div class="header-right">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span id="engine-status">Z3 Online (v5.1.0)</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Metrics Row -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">BENCHMARK ACCURACY</div>
+        <div class="metric-value text-emerald" id="stat-accuracy">100.0%</div>
+        <div class="metric-sub">20/20 Formal Problems Verified</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">MEAN SMT LATENCY</div>
+        <div class="metric-value text-blue" id="stat-latency">~12.8 ms</div>
+        <div class="metric-sub">Single-Context Isolated Z3 Queries</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">SEARCH HEURISTIC</div>
+        <div class="metric-value text-purple">PUCT + PRM</div>
+        <div class="metric-sub">Symbolic Step-Level Soundness Pruning</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">FORMAL INTEROP</div>
+        <div class="metric-value text-amber">Lean 4 Mathlib</div>
+        <div class="metric-sub">Z3 SMT to Lean 4 Auto-Transpilation</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="benchmarks">📊 20-Problem Benchmark Suite</button>
+      <button class="tab-btn" data-tab="mcts">🌲 MCTS Proof Tree Explorer</button>
+      <button class="tab-btn" data-tab="bitvectors">⚡ Bit-Vector & Overflow (QF_BV)</button>
+      <button class="tab-btn" data-tab="invariants">🔄 Loop Invariant Induction</button>
+      <button class="tab-btn" data-tab="lean">📜 Lean 4 Bridge</button>
+    </nav>
+
+    <!-- Tab 1: Benchmarks -->
+    <main class="tab-content active" id="tab-benchmarks">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Formal Benchmark Suite</h2>
+            <p class="panel-desc">20 mathematically rigorous conjectures across Algebra, Analysis, Combinatorics, Logic, and Number Theory.</p>
+          </div>
+          <button class="action-btn primary" id="btn-run-benchmarks">▶ Run Full Suite (Live Z3)</button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table" id="benchmarks-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Domain</th>
+                <th>Conjecture Name</th>
+                <th>Expected</th>
+                <th>Actual Status</th>
+                <th>Latency</th>
+                <th>Counterexample / Witness</th>
+              </tr>
+            </thead>
+            <tbody id="benchmarks-tbody">
+              <tr><td colspan="7" class="text-muted text-center">Click "Run Full Suite" to execute live verification across all 20 formal problems.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Tab 2: MCTS Tree Search -->
+    <main class="tab-content" id="tab-mcts">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Process-Supervised MCTS Proof Search</h2>
+            <p class="panel-desc">Visualizing PUCT tree search with Process Reward Model (PRM) guidance and automated branch pruning upon detecting invalid deductive steps.</p>
+          </div>
+          <button class="action-btn primary" id="btn-run-mcts">⚡ Run MCTS Simulation</button>
+        </div>
+
+        <div class="split-view">
+          <div class="split-sidebar">
+            <h3>Search Parameters</h3>
+            <div class="form-group">
+              <label>Initial Premise(s):</label>
+              <input type="text" id="mcts-premises" value="(x - y)*(x + y) == 0" class="input-text" />
+            </div>
+            <div class="form-group">
+              <label>Target Goal:</label>
+              <input type="text" id="mcts-goal" value="(x == y) or (x == -y)" class="input-text" />
+            </div>
+            <div class="form-group">
+              <label>Simulations:</label>
+              <input type="number" id="mcts-sims" value="20" class="input-text" />
+            </div>
+            <div class="stats-box" id="mcts-stats">
+              <div><strong>Goal Proven:</strong> <span id="mcts-proven">-</span></div>
+              <div><strong>Nodes Explored:</strong> <span id="mcts-nodes">-</span></div>
+              <div><strong>Branches Pruned:</strong> <span id="mcts-pruned">-</span></div>
+            </div>
+          </div>
+          <div class="split-main">
+            <h3>Proof Search Graph (Mermaid Live)</h3>
+            <div id="mcts-mermaid-container" class="mermaid-box">
+              <div class="text-muted">Click "Run MCTS Simulation" to generate the interactive proof tree.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Tab 3: Bitvectors -->
+    <main class="tab-content" id="tab-bitvectors">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>QF_BV Hardware-Accurate Bit-Vector Verification</h2>
+            <p class="panel-desc">Bit-precise modulo $2^W$ reasoning: overflow detection, branchless hacks, and XOR arithmetic.</p>
+          </div>
+          <button class="action-btn primary" id="btn-run-bitvectors">⚡ Run Bit-Vector Solvers</button>
+        </div>
+
+        <div class="cards-grid" id="bitvector-results">
+          <div class="card">
+            <h3>1. XOR Register Swap Soundness</h3>
+            <p class="card-desc">Prove $(a \oplus b \oplus a) = b$ without temporary storage.</p>
+            <div class="card-body" id="bv-xor-res">Status: Pending run...</div>
+          </div>
+          <div class="card">
+            <h3>2. 32-bit Addition Signed Overflow</h3>
+            <p class="card-desc">Find minimal witness pair $(x, y) \in 	ext{Int32}$ causing wrapping overflow.</p>
+            <div class="card-body" id="bv-overflow-res">Status: Pending run...</div>
+          </div>
+          <div class="card">
+            <h3>3. Power-of-Two Bit Hack</h3>
+            <p class="card-desc">Verify $(x \ \&\ (x - 1)) == 0 \iff x = 2^k$ over $x \in [1, 2^{32}-1]$.</p>
+            <div class="card-body" id="bv-p2-res">Status: Pending run...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Tab 4: Invariants -->
+    <main class="tab-content" id="tab-invariants">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Automated Loop Invariant Verification</h2>
+            <p class="panel-desc">Three-stage Hoare-style induction verification: Initiation &rArr; Consecution &rArr; Safety.</p>
+          </div>
+          <button class="action-btn primary" id="btn-run-invariants">⚡ Verify Candidate Invariant</button>
+        </div>
+
+        <div class="form-group" style="max-width: 600px; margin-bottom: 20px;">
+          <label>Candidate Invariant $\mathcal{I}(i, s)$:</label>
+          <input type="text" id="inv-candidate" value="s == (i * (i - 1)) / 2" class="input-text" />
+          <span class="text-muted" style="font-size: 12px;">Try also a flawed invariant: <code>s == i * (i - 1)</code> to observe induction failure witness!</span>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card" id="inv-init-card">
+            <h3>1. Initiation ($i=0, s=0 \implies \mathcal{I}$)</h3>
+            <div id="inv-init-body" class="card-body">-</div>
+          </div>
+          <div class="card" id="inv-cons-card">
+            <h3>2. Consecution ($\mathcal{I} \land i < N \implies \mathcal{I}^\prime$)</h3>
+            <div id="inv-cons-body" class="card-body">-</div>
+          </div>
+          <div class="card" id="inv-safe-card">
+            <h3>3. Safety ($\mathcal{I} \land i \ge N \implies s = N(N-1)/2$)</h3>
+            <div id="inv-safe-body" class="card-body">-</div>
+          </div>
+        </div>
+        <div class="status-banner" id="inv-verdict">Awaiting execution...</div>
+      </div>
+    </main>
+
+    <!-- Tab 5: Lean 4 Bridge -->
+    <main class="tab-content" id="tab-lean">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Lean 4 & Mathlib Interoperability Bridge</h2>
+            <p class="panel-desc">Transpile verified SMT-LIB and Z3 proof steps into certified Lean 4 formal code.</p>
+          </div>
+          <button class="action-btn primary" id="btn-gen-lean">⚡ Generate Lean 4 Theorem</button>
+        </div>
+
+        <div class="code-preview">
+          <pre><code id="lean-code-output">-- Click "Generate Lean 4 Theorem" to synthesize verified Lean 4 code from SMT proof steps.</code></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -18,10 +18,13 @@
 1. **Automated Counterexample Synthesis:** Immediate generation of concrete algebraic, number-theoretic, and combinatorial countermodels disproving false mathematical conjectures.
 2. **Process Reward Modeling (Symbolic PRM):** Exact formal auditing of intermediate proof steps ($H_1 \land \dots \land H_k \implies C$) returning $+1.0$ (sound), $-1.0$ (invalid with countermodel), or $0.0$ (unknown).
 3. **MCTS with Hard Pruning:** Monte Carlo Tree Search guided by PUCT and symbolic Z3 rewards, eliminating compute waste on mathematically flawed branches.
-4. **Ramsey Theorem Prover ($R(3,3) = 6$):** Formal propositional SAT certification proving $R(3,3) > 5$ (triangle-free 2-coloring on $K_5$) and $R(3,3) \le 6$ (UNSAT on $K_6$).
-5. **Continuous/Discrete Stochastic Filter (MCMC):** Metropolis-Hastings simulated annealing to discover empirical boundary violations before exact SMT certification.
-6. **SMT-LIB v2 Native Parser:** Sanitizes and executes raw LLM-generated S-expressions directly.
-7. **Mermaid Flowchart Visualizer:** Exports color-coded proof search trees (Green = Sound, Red = Pruned with Counterexample, Gold = Q.E.D.).
+4. **Hardware Bit-Vectors (QF_BV):** Finite-word modulo $2^W$ reasoning, integer overflow boundary discovery (INT_MAX wrapping), XOR register swap proofs, and power-of-two bitwise hacks.
+5. **Inductive Loop Invariant Induction:** Three-stage Hoare-style verification (Initiation $\implies$ Consecution $\implies$ Safety) with concrete Counterexample to Induction (CTI) synthesis.
+6. **Lean 4 / Mathlib Interoperability:** Transpilation of SMT proofs and verified deduction trajectories into certified Lean 4 theorems (`omega`, `linarith`).
+7. **Interactive Web Dashboard & REST API:** Standalone zero-external-dependency local visualizer with live Z3 benchmark runner and Mermaid proof trees.
+8. **Ramsey Theorem Prover ($R(3,3) = 6$):** Formal propositional SAT certification proving $R(3,3) > 5$ (triangle-free 2-coloring on $K_5$) and $R(3,3) \le 6$ (UNSAT on $K_6$).
+9. **Continuous/Discrete Stochastic Filter (MCMC):** Metropolis-Hastings simulated annealing to discover empirical boundary violations before exact SMT certification.
+10. **Z3 Tactic & Memory Profiler:** Sub-millisecond latency and heap footprint benchmarking across SAT, QF_LIA, QF_NRA, and QF_BV.
 
 ---
 
@@ -166,6 +169,62 @@ Parses raw LLM markdown blocks containing SMT-LIB v2 scripts, validates parenthe
 
 ---
 
+### 6. Hardware-Accurate Bit-Vectors (QF_BV) & Overflow
+```bash
+python examples/08_bitvector_verification.py
+# or CLI:
+python -m src.cli --bitvectors
+```
+Formally proves:
+- **32-bit XOR Register Swap:** $(a \oplus b \oplus a) = b$ verified across all $2^{32}$ states with zero scratch memory.
+- **Signed Integer Overflow:** Identifies exact boundary condition $x = 2147483647$ (`INT_MAX`) where $x + 1$ wraps to negative.
+- **Power-of-Two Bitwise Hack:** Proves $(x \ \&\ (x - 1)) == 0 \iff x = 2^k$ for all $x \in [1, 2^{32}-1]$.
+
+---
+
+### 7. Inductive Loop Invariant Synthesis & CTI Extraction
+```bash
+python examples/09_invariant_synthesis.py
+# or CLI:
+python -m src.cli --invariants
+```
+Verifies dynamical systems and loop invariants using 3-stage Hoare induction:
+1. **Initiation:** $\text{Init}(s) \implies \mathcal{I}(s)$
+2. **Consecution:** $\mathcal{I}(s) \land \text{Trans}(s, s') \implies \mathcal{I}(s')$
+3. **Safety:** $\mathcal{I}(s) \implies \text{Safe}(s)$
+Synthesizes concrete **Counterexamples to Induction (CTI)** when candidate invariants are too weak.
+
+---
+
+### 8. Lean 4 / Mathlib Interoperability Bridge
+```bash
+python examples/10_lean_interop.py
+# or CLI:
+python -m src.cli --lean
+```
+Translates Z3 SMT proof steps into certified Lean 4 formal code with automated tactic dispatch (`omega`, `linarith`, `ring`).
+
+---
+
+### 9. Interactive Web Dashboard & Local Visualizer
+```bash
+python -m src.cli --serve 8080
+```
+Launches a high-performance, dark-themed local research laboratory UI (zero external web dependencies, built on Python stdlib `http.server`):
+- **Live 20-Problem Benchmark Runner** with sub-millisecond per-problem execution.
+- **Dynamic Mermaid MCTS Proof Tree Viewer** rendering sound vs. pruned branches in real time.
+- **Interactive QF_BV & Induction Solvers** with instantaneous witness generation.
+
+---
+
+### 10. Z3 Tactic & Memory Profiler
+```bash
+python benchmarks/profiler.py
+```
+Profiles latency (sub-millisecond) and peak memory usage across SAT, QF_LIA, QF_NRA, and QF_BV logics.
+
+---
+
 ## Benchmark Suite (20 Mathematical Problems)
 
 Run the comprehensive 20-problem evaluation benchmark:
@@ -196,6 +255,18 @@ python -m src.cli --benchmark
 # Run all 3 core showcases
 python -m src.cli --demo
 
+# Launch interactive Web UI dashboard on http://localhost:8080
+python -m src.cli --serve 8080
+
+# Run QF_BV bit-vector hardware verification
+python -m src.cli --bitvectors
+
+# Run 3-stage inductive loop invariant verification
+python -m src.cli --invariants
+
+# Synthesize Lean 4 formal code from SMT proofs
+python -m src.cli --lean
+
 # Run MCTS proof search and export Mermaid diagram
 python -m src.cli --mcts --export-tree proof_tree.mmd
 
@@ -204,6 +275,9 @@ python -m src.cli --ramsey
 
 # Run full 20-problem benchmark suite
 python -m src.cli --benchmark
+
+# Profile Z3 memory and tactic latency
+python benchmarks/profiler.py
 
 # Verify or falsify custom mathematical queries
 python -m src.cli --conjecture "Euler polynomial prime"

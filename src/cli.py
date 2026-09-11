@@ -145,6 +145,22 @@ def main():
         "--backend", type=str, choices=["mock", "ollama", "openai"], default="mock",
         help="LLM backend to use (default: 'mock' for 100%% offline reproducibility)"
     )
+    parser.add_argument(
+        "--serve", nargs="?", const=8080, type=int, default=None,
+        help="Start the interactive local Web UI dashboard (default port: 8080)"
+    )
+    parser.add_argument(
+        "--bitvectors", action="store_true",
+        help="Run bit-precise QF_BV hardware verification (overflow, XOR swap, power-of-2)"
+    )
+    parser.add_argument(
+        "--invariants", action="store_true",
+        help="Run 3-stage inductive loop invariant verification (initiation, consecution, safety)"
+    )
+    parser.add_argument(
+        "--lean", action="store_true",
+        help="Synthesize certified Lean 4 / Mathlib declarations from Z3 SMT proofs"
+    )
 
     args = parser.parse_args()
 
@@ -156,6 +172,58 @@ def main():
         backend = MockOfflineBackend()
 
     smt_engine = SMTEngine()
+
+    if args.serve is not None:
+        from .web.server import start_server
+        port = args.serve
+        start_server(port=port)
+        return
+
+    if args.bitvectors:
+        from .bitvectors import BitVectorVerifier
+        bv = BitVectorVerifier()
+        print("\n" + "=" * 75)
+        print("QF_BV HARDWARE-ACCURATE BIT-VECTOR VERIFICATION")
+        print("=" * 75)
+        xor_res = bv.verify_xor_swap(32)
+        print(f"-> 32-bit XOR Register Swap: {'SOUND (Verified)' if xor_res.is_sound else 'FALSIFIED'}")
+        ov_res = bv.verify_addition_overflow(32, signed=True)
+        print(f"-> 32-bit Signed Addition Overflow: Witness Found => {ov_res.counterexample}")
+        p2_res = bv.verify_power_of_two_hack(32)
+        print(f"-> 32-bit Power-of-Two Bit Hack: {'SOUND (Verified)' if p2_res.is_sound else 'FALSIFIED'}")
+        print("=" * 75 + "\n")
+        return
+
+    if args.invariants:
+        from .lemma_synthesis import LoopInvariantVerifier
+        inv = LoopInvariantVerifier()
+        print("\n" + "=" * 75)
+        print("INDUCTIVE LOOP INVARIANT VERIFICATION (HOARE INDUCTION)")
+        print("=" * 75)
+        rep = inv.verify_sum_n_invariant("2 * s == i * (i - 1)")
+        print(f"Candidate: {rep.candidate_invariant}")
+        print(f"  1. Initiation : {'PASS' if rep.initiation_holds else 'FAIL'}")
+        print(f"  2. Consecution: {'PASS' if rep.consecution_holds else 'FAIL'}")
+        print(f"  3. Safety     : {'PASS' if rep.safety_holds else 'FAIL'}")
+        print(f"-> Inductive Invariant Certified: {rep.is_valid_inductive_invariant}")
+        print("=" * 75 + "\n")
+        return
+
+    if args.lean:
+        from .lean_bridge import LeanBridge
+        bridge = LeanBridge()
+        print("\n" + "=" * 75)
+        print("LEAN 4 / MATHLIB FORMAL SPECIFICATION SYNTHESIS")
+        print("=" * 75)
+        code = bridge.export_theorem(
+            "difference_of_squares_zero",
+            {"x": "Int", "y": "Int"},
+            ["(x - y) * (x + y) = 0"],
+            "x = y \\/ x = -y"
+        ).lean_code
+        print(code)
+        print("=" * 75 + "\n")
+        return
 
     if args.ramsey:
         from .ramsey import check_ramsey

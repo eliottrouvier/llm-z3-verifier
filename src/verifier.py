@@ -14,12 +14,16 @@ from .smt_engine import SMTEngine, SMTResult
 class ProofStep:
     step_id: int
     text: str
-    variables: Dict[str, str]
-    hypotheses: List[str]
-    conclusion: str
+    variables: Dict[str, str] = field(default_factory=dict)
+    hypotheses: List[str] = field(default_factory=list)
+    conclusion: str = ""
     status: str = "PENDING"  # PENDING, SOUND, UNSOUND, UNKNOWN
     counterexample: Optional[Dict[str, Any]] = None
     verification_time_ms: float = 0.0
+
+    @property
+    def is_sound(self) -> bool:
+        return self.status == "SOUND"
 
 
 @dataclass

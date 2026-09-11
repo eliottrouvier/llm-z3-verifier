@@ -21,6 +21,10 @@ class SMTResult:
     solver_time_ms: float = 0.0
     reason_unknown: Optional[str] = None
 
+    @property
+    def is_sound(self) -> bool:
+        return self.is_valid
+
 
 class SMTEngine:
     """Manages compilation, solving, and model extraction using Z3."""

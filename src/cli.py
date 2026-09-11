@@ -161,6 +161,22 @@ def main():
         "--lean", action="store_true",
         help="Synthesize certified Lean 4 / Mathlib declarations from Z3 SMT proofs"
     )
+    parser.add_argument(
+        "--repair", action="store_true",
+        help="Run counterexample-guided auto-repair & self-correction loop"
+    )
+    parser.add_argument(
+        "--unsat-core", action="store_true",
+        help="Extract minimal unsat core (MUS) and prune redundant hypothesis distractors"
+    )
+    parser.add_argument(
+        "--quantifiers", action="store_true",
+        help="Run first-order quantifier reasoning & MBQI (additive inverse, swap fallacy)"
+    )
+    parser.add_argument(
+        "--generate-prm", nargs="?", const=6, type=int, default=None,
+        help="Generate synthetic step-supervised PRM training dataset with Z3 oracle labels"
+    )
 
     args = parser.parse_args()
 

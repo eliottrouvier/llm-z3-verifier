@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-z3-verifier"
+version = "0.2.0"
+description = "Neurosymbolic Counterexample Search, Step-Level Proof Verification, and MCTS Pruning with Z3"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Eliott Rouvier", email = "eliott.rouvier@gmail.com" }
+]
+keywords = [
+    "neurosymbolic-ai",
+    "smt-solver",
+    "z3",
+    "automated-reasoning",
+    "formal-verification",
+    "process-reward-models",
+    "mcts",
+    "theorem-proving"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+dependencies = [
+    "z3-solver>=4.12.0",
+    "numpy>=1.24.0",
+    "requests>=2.31.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0"
+]
+
+[project.scripts]
+llm-z3 = "src.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

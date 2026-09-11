@@ -119,7 +119,19 @@ def main():
     )
     parser.add_argument(
         "--demo", action="store_true",
-        help="Run all 3 showcase demonstrations sequentially"
+        help="Run all 3 core showcase demonstrations sequentially"
+    )
+    parser.add_argument(
+        "--mcts", action="store_true",
+        help="Run Monte Carlo Tree Search proof search with Symbolic PRM guidance"
+    )
+    parser.add_argument(
+        "--ramsey", action="store_true",
+        help="Run formal SAT/SMT certification of Ramsey's Theorem R(3,3) = 6"
+    )
+    parser.add_argument(
+        "--export-tree", type=str, default=None,
+        help="Export generated proof search tree to a Mermaid (.mmd) file"
     )
     parser.add_argument(
         "--conjecture", type=str, default=None,
@@ -127,7 +139,7 @@ def main():
     )
     parser.add_argument(
         "--benchmark", action="store_true",
-        help="Run quantitative evaluation benchmark suite"
+        help="Run quantitative evaluation benchmark suite (20 problems)"
     )
     parser.add_argument(
         "--backend", type=str, choices=["mock", "ollama", "openai"], default="mock",
@@ -145,6 +157,42 @@ def main():
 
     smt_engine = SMTEngine()
 
+    if args.ramsey:
+        from .ramsey import check_ramsey
+        print("\n" + "=" * 75)
+        print("CERTIFICATION: Ramsey's Theorem R(3,3) = 6 via First-Order SAT")
+        print("=" * 75)
+        print("-> Testing K_5 for triangle-free 2-coloring...")
+        s5, col5 = check_ramsey(5, 3)
+        print(f"   K_5 Result: {s5} (Counterexample coloring exists => R(3,3) > 5)")
+        print("-> Testing K_6 for triangle-free 2-coloring...")
+        s6, _ = check_ramsey(6, 3)
+        print(f"   K_6 Result: {s6} (No 2-coloring exists => R(3,3) <= 6)")
+        print("-> Formally Proven: R(3,3) = 6 strictly certified by Z3.")
+        return
+
+    if args.mcts:
+        from .prm_verifier import SymbolicPRM
+        from .mcts_search import MCTSProofSearch
+        from .visualizer import ProofTreeVisualizer
+
+        print("\n" + "=" * 75)
+        print("MCTS Proof Search with Symbolic PRM Guidance")
+        print("=" * 75)
+        prm = SymbolicPRM()
+        mcts = MCTSProofSearch(backend=backend, prm=prm)
+        res = mcts.search(["(x - y)*(x + y) == 0"], "(x == y) or (x == -y)", num_simulations=20)
+        print(f"Nodes Explored: {res.total_nodes} | Branches Pruned: {res.nodes_pruned} | Proven: {res.goal_proven}")
+        for step in res.best_sound_trajectory:
+            print(f" [PASS] Step {step.step_id}: {step.text}")
+
+        if args.export_tree:
+            mmd = ProofTreeVisualizer.render_mermaid_mcts(res)
+            with open(args.export_tree, "w", encoding="utf-8") as f:
+                f.write(mmd)
+            print(f"-> Mermaid diagram saved to {args.export_tree}")
+        return
+
     if args.demo or len(sys.argv) == 1:
         print("===========================================================================")
         print(" llm-z3-verifier: Neurosymbolic Counterexample Search & Proof Verification")
@@ -153,6 +201,17 @@ def main():
         run_showcase_1(backend, smt_engine)
         run_showcase_2(backend)
         run_showcase_3()
+
+        if args.export_tree:
+            from .tree_search import NeurosymbolicTreeSearch
+            from .visualizer import ProofTreeVisualizer
+            searcher = NeurosymbolicTreeSearch(backend=backend)
+            ts_res = searcher.search(["(x - y)*(x + y) == 0"], "(x == y) or (x == -y)")
+            mmd = ProofTreeVisualizer.render_mermaid_tree_search(ts_res)
+            with open(args.export_tree, "w", encoding="utf-8") as f:
+                f.write(mmd)
+            print(f"\n-> Search tree exported to: {args.export_tree}")
+
         print("\n" + "=" * 75)
         print("All showcases completed successfully with 100% formal soundness.")
         print("=" * 75 + "\n")

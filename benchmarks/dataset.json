@@ -1,34 +1,162 @@
 [
   {
-    "id": "conj_01",
+    "id": "ALG_01",
     "name": "Matrix Zero Divisors",
     "text": "For all 2x2 integer matrices A and B, if A*B = 0 then A = 0 or B = 0.",
     "ground_truth": "falsifiable",
-    "domain": "algebra",
+    "domain": "Algebra",
     "query_key": "matrix_zero_divisors"
   },
   {
-    "id": "conj_02",
-    "name": "Graph Chromatic Lower Bound",
-    "text": "Every finite graph with minimum degree at least 3 has chromatic number >= 4.",
+    "id": "ALG_02",
+    "name": "Matrix Non-Commutativity",
+    "text": "For all 2x2 integer matrices A and B, A*B = B*A.",
     "ground_truth": "falsifiable",
-    "domain": "combinatorics",
-    "query_key": "graph_bipartite_degree"
+    "domain": "Algebra",
+    "query_key": "matrix_commutativity"
   },
   {
-    "id": "conj_03",
-    "name": "Euler Polynomial Factorization",
+    "id": "ALG_03",
+    "name": "Orthogonal Idempotents",
+    "text": "If P^2 = P and Q^2 = Q and P + Q = 1, then P*Q = 0.",
+    "ground_truth": "valid",
+    "domain": "Algebra",
+    "query_key": "idempotent_difference"
+  },
+  {
+    "id": "ALG_04",
+    "name": "Nilpotent Invertibility",
+    "text": "If a^2 = 0 in a ring, then 1 + a != 0.",
+    "ground_truth": "valid",
+    "domain": "Algebra",
+    "query_key": "nilpotent_invertible"
+  },
+  {
+    "id": "NUM_01",
+    "name": "Euler Polynomial Prime Generation",
     "text": "The polynomial n^2 - n + 41 produces primes for all integers n.",
     "ground_truth": "falsifiable",
-    "domain": "number_theory",
+    "domain": "Number Theory",
     "query_key": "euler_primes"
   },
   {
-    "id": "conj_04",
-    "name": "Strict Positive Quadratic Form",
-    "text": "For all real x and y, x^2 - 2x + y^2 + 2 > 0.",
+    "id": "NUM_02",
+    "name": "Sum of Two Squares Congruence",
+    "text": "An integer of the form 4k + 3 cannot be written as a sum of two squares.",
     "ground_truth": "valid",
-    "domain": "real_algebra",
-    "query_key": "quadratic_form"
+    "domain": "Number Theory",
+    "query_key": "sum_of_two_squares_4k3"
+  },
+  {
+    "id": "NUM_03",
+    "name": "Fermat Pseudoprime Composite",
+    "text": "If 2^(n-1) = 1 mod n for n > 1, then n is strictly prime.",
+    "ground_truth": "falsifiable",
+    "domain": "Number Theory",
+    "query_key": "fermat_pseudoprime"
+  },
+  {
+    "id": "NUM_04",
+    "name": "Goldbach Decomposition for 10",
+    "text": "The even integer 10 can be partitioned as the sum of two odd primes.",
+    "ground_truth": "falsifiable",
+    "domain": "Number Theory",
+    "query_key": "goldbach_small_10"
+  },
+  {
+    "id": "ANA_01",
+    "name": "Cauchy-Schwarz Inequality R^3",
+    "text": "For all vectors x, y in R^3, (x.y)^2 <= ||x||^2 * ||y||^2.",
+    "ground_truth": "valid",
+    "domain": "Analysis & Optimization",
+    "query_key": "cauchy_schwarz_3d"
+  },
+  {
+    "id": "ANA_02",
+    "name": "AM-GM Inequality 2D",
+    "text": "For all non-negative real numbers a and b, (a + b)/2 >= sqrt(a*b).",
+    "ground_truth": "valid",
+    "domain": "Analysis & Optimization",
+    "query_key": "am_gm_2d"
+  },
+  {
+    "id": "ANA_03",
+    "name": "Strict Quadratic Convexity",
+    "text": "The quadratic form x^2 - 4xy + 5y^2 is non-negative for all real x, y.",
+    "ground_truth": "valid",
+    "domain": "Analysis & Optimization",
+    "query_key": "convexity_quadratic"
+  },
+  {
+    "id": "ANA_04",
+    "name": "Non-Convex Global Potential Minimum",
+    "text": "The polynomial potential f(x) = x^4 - 2x^2 + 1 is bounded below by 0.",
+    "ground_truth": "valid",
+    "domain": "Analysis & Optimization",
+    "query_key": "nonconvex_global_min"
+  },
+  {
+    "id": "CMB_01",
+    "name": "Graph Chromatic Lower Bound",
+    "text": "Every finite graph with minimum degree delta >= 3 has chromatic number >= 4.",
+    "ground_truth": "falsifiable",
+    "domain": "Combinatorics & Graph Theory",
+    "query_key": "graph_bipartite_degree"
+  },
+  {
+    "id": "CMB_02",
+    "name": "Ramsey Lower Bound R(3,3) > 5",
+    "text": "There exists a 2-coloring of the complete graph K_5 without any monochromatic triangle.",
+    "ground_truth": "falsifiable",
+    "domain": "Combinatorics & Graph Theory",
+    "query_key": "ramsey_r33_bound5"
+  },
+  {
+    "id": "CMB_03",
+    "name": "Ramsey Upper Bound R(3,3) <= 6",
+    "text": "Every 2-coloring of the complete graph K_6 contains at least one monochromatic triangle.",
+    "ground_truth": "valid",
+    "domain": "Combinatorics & Graph Theory",
+    "query_key": "ramsey_r33_bound6"
+  },
+  {
+    "id": "CMB_04",
+    "name": "Pigeonhole Principle Collisions",
+    "text": "Assigning 5 items into 4 distinct bins must result in at least one collision.",
+    "ground_truth": "valid",
+    "domain": "Combinatorics & Graph Theory",
+    "query_key": "pigeonhole_principle"
+  },
+  {
+    "id": "LOG_01",
+    "name": "De Morgan Duality Theorem",
+    "text": "In propositional logic, ~(A & B) is logically equivalent to (~A | ~B).",
+    "ground_truth": "valid",
+    "domain": "Formal Logic",
+    "query_key": "demorgan_law"
+  },
+  {
+    "id": "LOG_02",
+    "name": "Modus Ponens Rule Soundness",
+    "text": "Given premise A and implication (A => B), conclusion B holds soundly.",
+    "ground_truth": "valid",
+    "domain": "Formal Logic",
+    "query_key": "modus_ponens"
+  },
+  {
+    "id": "LOG_03",
+    "name": "Affirming the Consequent Fallacy",
+    "text": "Given premise B and implication (A => B), conclusion A is deductive.",
+    "ground_truth": "falsifiable",
+    "domain": "Formal Logic",
+    "query_key": "affirming_the_consequent"
+  },
+  {
+    "id": "LOG_04",
+    "name": "Peirce Classical Logic Law",
+    "text": "The proposition ((P => Q) => P) => P is universally valid in classical logic.",
+    "ground_truth": "valid",
+    "domain": "Formal Logic",
+    "query_key": "peirce_law"
   }
 ]

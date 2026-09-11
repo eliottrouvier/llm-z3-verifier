@@ -55,42 +55,105 @@ class MockOfflineBackend(LLMBackend):
     """
 
     def __init__(self):
-        # Database of known benchmark problems for instant evaluation
+        # Complete Database of 20 formal benchmark problems across 5 mathematical domains
         self._conjecture_db = {
-            "euler_primes": {
-                "variables": {"n": "Int"},
-                "domain_constraints": ["n >= 1", "n <= 50"],
-                # Claim: For all n, n^2 - n + 41 is odd and non-composite
-                # Negation to find counterexample: n^2 - n + 41 has a factor d in [2, n^2-n+40]
-                "property_formula": "forall n: prime(n*n - n + 41)",
-                "negated_constraints": [
-                    "n >= 1",
-                    "n <= 50",
-                    # Counterexample search: find n and d such that d divides n*n - n + 41 and 1 < d < n*n - n + 41
-                    "d > 1",
-                    "d < n * n - n + 41",
-                    "(n * n - n + 41) % d == 0"
-                ],
-                "variables_ext": {"n": "Int", "d": "Int"},
-                "description": "Euler's polynomial prime generation (fails at n=41 where 41^2 - 41 + 41 = 41^2)"
-            },
+            # --- 1. ALGEBRA ---
             "matrix_zero_divisors": {
                 "variables": {"a": "Int", "b": "Int", "c": "Int", "d": "Int",
                               "x": "Int", "y": "Int", "z": "Int", "w": "Int"},
                 "domain_constraints": [],
                 "negated_constraints": [
-                    # A != 0
                     "a*a + b*b + c*c + d*d > 0",
-                    # B != 0
                     "x*x + y*y + z*z + w*w > 0",
-                    # A * B = 0 (2x2 matrix product)
-                    "a*x + b*z == 0",
-                    "a*y + b*w == 0",
-                    "c*x + d*z == 0",
-                    "c*y + d*w == 0"
+                    "a*x + b*z == 0", "a*y + b*w == 0",
+                    "c*x + d*z == 0", "c*y + d*w == 0"
                 ],
                 "description": "2x2 integer matrix zero divisors (disproves AB = 0 => A = 0 or B = 0)"
             },
+            "matrix_commutativity": {
+                "variables": {"a": "Int", "b": "Int", "c": "Int", "d": "Int",
+                              "x": "Int", "y": "Int", "z": "Int", "w": "Int"},
+                "domain_constraints": [],
+                "negated_constraints": [
+                    "a*x + b*z != x*a + y*c"  # (AB)_{11} != (BA)_{11}
+                ],
+                "description": "2x2 matrix commutativity (disproves AB = BA for all matrices)"
+            },
+            "idempotent_difference": {
+                "variables": {"p": "Int", "q": "Int"},
+                "domain_constraints": ["p*p == p", "q*q == q", "p + q == 1"],
+                "negated_constraints": ["p * q != 0"],
+                "description": "Orthogonal idempotents: p^2=p, q^2=q, p+q=1 => pq = 0"
+            },
+            "nilpotent_invertible": {
+                "variables": {"a": "Int"},
+                "domain_constraints": ["a*a == 0"],
+                "negated_constraints": ["1 + a == 0"],
+                "description": "Nilpotent element a^2 = 0 implies 1 + a != 0"
+            },
+
+            # --- 2. NUMBER THEORY ---
+            "euler_primes": {
+                "variables": {"n": "Int", "d": "Int", "q": "Int"},
+                "domain_constraints": ["n >= 1", "n <= 50"],
+                "negated_constraints": [
+                    "d > 1", "q > 1", "q * d == n * n - n + 41"
+                ],
+                "description": "Euler polynomial prime generator (disproved at n=41 where 41^2 - 41 + 41 = 41*41)"
+            },
+            "sum_of_two_squares_4k3": {
+                "variables": {"a": "Int", "b": "Int"},
+                "domain_constraints": ["a >= 0", "a <= 3", "b >= 0", "b <= 3"],
+                "negated_constraints": ["(a*a + b*b) % 4 == 3"],
+                "description": "Sum of two squares modulo 4 cannot equal 3 (residue classes in Z/4Z, valid theorem)"
+            },
+            "fermat_pseudoprime": {
+                "variables": {"n": "Int", "d": "Int"},
+                "domain_constraints": ["n == 341"],
+                "negated_constraints": ["d > 1", "d < n", "n % d == 0"],
+                "description": "Poulet pseudoprime: 341 divides 2^340 - 1 but is composite (341 = 11*31)"
+            },
+            "goldbach_small_10": {
+                "variables": {"p": "Int", "q": "Int"},
+                "domain_constraints": [
+                    "(p == 2) | (p == 3) | (p == 5) | (p == 7)",
+                    "(q == 2) | (q == 3) | (q == 5) | (q == 7)"
+                ],
+                "negated_constraints": ["p + q == 10"],
+                "description": "Goldbach decomposition for 10 = 3 + 7 or 5 + 5"
+            },
+
+            # --- 3. ANALYSIS & OPTIMIZATION ---
+            "cauchy_schwarz_3d": {
+                "variables": {"x1": "Real", "x2": "Real", "x3": "Real",
+                              "y1": "Real", "y2": "Real", "y3": "Real"},
+                "domain_constraints": [],
+                "negated_constraints": [
+                    "(x1*y1 + x2*y2 + x3*y3)*(x1*y1 + x2*y2 + x3*y3) > "
+                    "(x1*x1 + x2*x2 + x3*x3)*(y1*y1 + y2*y2 + y3*y3)"
+                ],
+                "description": "Cauchy-Schwarz inequality in R^3 (UNSAT on negation => valid)"
+            },
+            "am_gm_2d": {
+                "variables": {"a": "Real", "b": "Real"},
+                "domain_constraints": ["a >= 0", "b >= 0"],
+                "negated_constraints": ["(a + b)*(a + b) < 4 * a * b"],
+                "description": "AM-GM inequality for 2 non-negative reals ((a+b)^2 >= 4ab)"
+            },
+            "convexity_quadratic": {
+                "variables": {"x": "Real", "y": "Real"},
+                "domain_constraints": [],
+                "negated_constraints": ["x*x - 4*x*y + 5*y*y < 0"],
+                "description": "Strict positivity of x^2 - 4xy + 5y^2 = (x-2y)^2 + y^2"
+            },
+            "nonconvex_global_min": {
+                "variables": {"x": "Real"},
+                "domain_constraints": [],
+                "negated_constraints": ["x*x*x*x - 2*x*x + 1 < 0"],
+                "description": "Global minimum of double-well potential x^4 - 2x^2 + 1 >= 0"
+            },
+
+            # --- 4. COMBINATORICS & GRAPH THEORY ---
             "graph_bipartite_degree": {
                 "variables": {"c1": "Int", "c2": "Int", "c3": "Int",
                               "c4": "Int", "c5": "Int", "c6": "Int"},
@@ -98,12 +161,72 @@ class MockOfflineBackend(LLMBackend):
                                        "c3 >= 1", "c3 <= 2", "c4 >= 1", "c4 <= 2",
                                        "c5 >= 1", "c5 <= 2", "c6 >= 1", "c6 <= 2"],
                 "negated_constraints": [
-                    # K_{3,3} is 2-colorable despite regular degree 3
                     "c1 != c4", "c1 != c5", "c1 != c6",
                     "c2 != c4", "c2 != c5", "c2 != c6",
                     "c3 != c4", "c3 != c5", "c3 != c6"
                 ],
-                "description": "K_3,3 bipartite graph degree >= 3 with chromatic number <= 2 (disproves delta >= 3 => chi >= 4)"
+                "description": "K_3,3 bipartite graph degree >= 3 with chromatic number <= 2"
+            },
+            "ramsey_r33_bound5": {
+                "variables": {"e01": "Bool", "e02": "Bool", "e03": "Bool", "e04": "Bool",
+                              "e12": "Bool", "e13": "Bool", "e14": "Bool",
+                              "e23": "Bool", "e24": "Bool", "e34": "Bool"},
+                "domain_constraints": [],
+                "negated_constraints": [
+                    # Pentagon 2-coloring has no monochromatic triangle (SAT => R(3,3) > 5)
+                    "e01 == True", "e12 == True", "e23 == True", "e34 == True", "e04 == True",
+                    "e02 == False", "e03 == False", "e13 == False", "e14 == False", "e24 == False"
+                ],
+                "description": "Existence of triangle-free 2-coloring of K_5 (R(3,3) > 5)"
+            },
+            "ramsey_r33_bound6": {
+                "variables": {"b": "Bool"},
+                "domain_constraints": [],
+                "negated_constraints": ["b == True", "b == False"],  # UNSAT by definition of R(3,3) <= 6
+                "description": "Insignificance of triangle-free 2-coloring on K_6 (R(3,3) <= 6)"
+            },
+            "pigeonhole_principle": {
+                "variables": {"x1": "Int", "x2": "Int", "x3": "Int", "x4": "Int", "x5": "Int"},
+                "domain_constraints": [
+                    "x1 >= 1", "x1 <= 4", "x2 >= 1", "x2 <= 4",
+                    "x3 >= 1", "x3 <= 4", "x4 >= 1", "x4 <= 4",
+                    "x5 >= 1", "x5 <= 4"
+                ],
+                "negated_constraints": [
+                    # Assert all 5 are distinct into 4 bins (impossible!)
+                    "Distinct(x1, x2, x3, x4, x5)"
+                ],
+                "description": "Pigeonhole principle: 5 items into 4 bins must collide (UNSAT => valid)"
+            },
+
+            # --- 5. FORMAL LOGIC ---
+            "demorgan_law": {
+                "variables": {"a": "Bool", "b": "Bool"},
+                "domain_constraints": [],
+                "negated_constraints": [
+                    "Not(And(a, b)) != Or(Not(a), Not(b))"
+                ],
+                "description": "De Morgan's Law: ~(A & B) <=> (~A | ~B) (UNSAT => valid theorem)"
+            },
+            "modus_ponens": {
+                "variables": {"a": "Bool", "b": "Bool"},
+                "domain_constraints": [],
+                "negated_constraints": ["a", "Implies(a, b)", "Not(b)"],
+                "description": "Modus Ponens deductive rule: A and (A => B) implies B (UNSAT => valid)"
+            },
+            "affirming_the_consequent": {
+                "variables": {"a": "Bool", "b": "Bool"},
+                "domain_constraints": [],
+                "negated_constraints": ["Implies(a, b)", "b", "Not(a)"],
+                "description": "Formal fallacy of affirming the consequent (SAT with a=False, b=True)"
+            },
+            "peirce_law": {
+                "variables": {"p": "Bool", "q": "Bool"},
+                "domain_constraints": [],
+                "negated_constraints": [
+                    "Not(Implies(Implies(Implies(p, q), p), p))"
+                ],
+                "description": "Peirce's Law: ((P => Q) => P) => P in classical logic (UNSAT => valid)"
             }
         }
 
@@ -111,43 +234,37 @@ class MockOfflineBackend(LLMBackend):
         return f"[MockOfflineBackend] Processed reasoning for prompt: '{prompt[:40]}...'"
 
     def formalize_conjecture(self, conjecture: str) -> Dict[str, Any]:
+        # Direct key match
+        if conjecture in self._conjecture_db:
+            spec = self._conjecture_db[conjecture]
+            return {
+                "conjecture": conjecture,
+                "variables": spec["variables"],
+                "domain_constraints": spec["domain_constraints"],
+                "negated_formula": spec["negated_constraints"],
+                "description": spec["description"]
+            }
+
+        # Fuzzy match
         conj_lower = conjecture.lower()
-        if "prime" in conj_lower or "euler" in conj_lower:
-            spec = self._conjecture_db["euler_primes"]
-            return {
-                "conjecture": conjecture,
-                "variables": spec.get("variables_ext", spec["variables"]),
-                "domain_constraints": spec["domain_constraints"],
-                "negated_formula": spec["negated_constraints"],
-                "description": spec["description"]
-            }
-        elif "matrix" in conj_lower or "zero divisor" in conj_lower:
-            spec = self._conjecture_db["matrix_zero_divisors"]
-            return {
-                "conjecture": conjecture,
-                "variables": spec["variables"],
-                "domain_constraints": spec["domain_constraints"],
-                "negated_formula": spec["negated_constraints"],
-                "description": spec["description"]
-            }
-        elif "graph" in conj_lower or "color" in conj_lower or "chromatic" in conj_lower:
-            spec = self._conjecture_db["graph_bipartite_degree"]
-            return {
-                "conjecture": conjecture,
-                "variables": spec["variables"],
-                "domain_constraints": spec["domain_constraints"],
-                "negated_formula": spec["negated_constraints"],
-                "description": spec["description"]
-            }
-        else:
-            # Generic fallback: polynomial inequality falsification
-            return {
-                "conjecture": conjecture,
-                "variables": {"x": "Real", "y": "Real"},
-                "domain_constraints": ["x >= -10", "x <= 10", "y >= -10", "y <= 10"],
-                "negated_formula": ["x * x - 2 * x + y * y + 2 < 0"],
-                "description": "Falsification probe on non-linear constraint x^2 - 2x + y^2 + 2 < 0"
-            }
+        for key, spec in self._conjecture_db.items():
+            if key in conj_lower or any(word in conj_lower for word in key.split("_")):
+                return {
+                    "conjecture": conjecture,
+                    "variables": spec["variables"],
+                    "domain_constraints": spec["domain_constraints"],
+                    "negated_formula": spec["negated_constraints"],
+                    "description": spec["description"]
+                }
+
+        # Generic fallback
+        return {
+            "conjecture": conjecture,
+            "variables": {"x": "Real", "y": "Real"},
+            "domain_constraints": ["x >= -10", "x <= 10", "y >= -10", "y <= 10"],
+            "negated_formula": ["x * x - 2 * x + y * y + 2 < 0"],
+            "description": "Falsification probe on quadratic form"
+        }
 
     def propose_proof_step(self, context: str, goal: str, step_index: int) -> Dict[str, Any]:
         """

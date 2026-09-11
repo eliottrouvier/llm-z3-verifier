@@ -1,0 +1,19 @@
+```mermaid
+flowchart TD
+    classDef rootStyle fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef soundStyle fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef prunedStyle fill:#ffebee,stroke:#d32f2f,stroke-width:2px;
+    classDef qedStyle fill:#fff8e1,stroke:#fbc02d,stroke-width:3px;
+
+    R["Theorem Root State"]:::rootStyle
+    M0["[Verified Step 0] Given (x - y)*(x + y) = 0, factor the polynomial over the integers."]:::soundStyle
+    R --> M0
+    M2["[Verified Step 2] Sound Case Analysis: If x - y == 0, then x = y. Otherwise x != y, which entails x + y = 0."]:::soundStyle
+    M0 --> M2
+    M3["[Verified Step 3] Conclude proof by synthesizing valid disjunction."]:::soundStyle
+    M2 --> M3
+    CE_0["[Branch Pruned by PRM]<br/>Countermodel: {'x': 1, 'y': 1}"]:::prunedStyle
+    R -.->|Falsified by Z3| CE_0
+    QED["<b>Theorem Proven (MCTS + Z3 Soundness)</b>"]:::qedStyle
+    M3 ==> QED
+```

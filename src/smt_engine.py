@@ -28,7 +28,43 @@ class SMTEngine:
     def __init__(self, default_timeout_ms: int = 5000):
         self.default_timeout_ms = default_timeout_ms
 
-    def create_variables(self, var_specs: Dict[str, str]) -> Dict[str, Any]:
+    def solve_smtlib_script(self, script_text: str, timeout_ms: Optional[int] = None) -> SMTResult:
+        """Parses and solves a complete SMT-LIB v2 script directly."""
+        timeout = timeout_ms or self.default_timeout_ms
+        solver = z3.Solver()
+        solver.set("timeout", timeout)
+
+        try:
+            assertions = z3.parse_smt2_string(script_text)
+            solver.add(assertions)
+        except Exception as e:
+            return SMTResult(
+                status="unknown",
+                is_valid=False,
+                reason_unknown=f"SMT-LIB v2 parsing error: {e}"
+            )
+
+        check_res = solver.check()
+        if check_res == z3.sat:
+            model = solver.model()
+            countermodel = {}
+            for d in model.decls():
+                val = model[d]
+                if z3.is_int_value(val):
+                    countermodel[str(d.name())] = val.as_long()
+                elif z3.is_rational_value(val):
+                    countermodel[str(d.name())] = float(val.as_decimal(5))
+                elif z3.is_bool(val):
+                    countermodel[str(d.name())] = bool(val)
+                else:
+                    countermodel[str(d.name())] = str(val)
+            return SMTResult(status="sat", is_valid=False, counterexample=countermodel)
+        elif check_res == z3.unsat:
+            return SMTResult(status="unsat", is_valid=True, counterexample=None)
+        else:
+            return SMTResult(status="unknown", is_valid=False, reason_unknown=str(solver.reason_unknown()))
+
+    def create_variables(self, var_specs: Dict[str, str], ctx: Optional[z3.Context] = None) -> Dict[str, Any]:
         """
         Creates Z3 AST symbols based on type mapping.
         Supported types: 'Int', 'Real', 'Bool'.
@@ -36,11 +72,11 @@ class SMTEngine:
         z3_vars = {}
         for name, vtype in var_specs.items():
             if vtype.lower() == "int":
-                z3_vars[name] = z3.Int(name)
+                z3_vars[name] = z3.Int(name, ctx=ctx) if ctx else z3.Int(name)
             elif vtype.lower() == "real":
-                z3_vars[name] = z3.Real(name)
+                z3_vars[name] = z3.Real(name, ctx=ctx) if ctx else z3.Real(name)
             elif vtype.lower() == "bool":
-                z3_vars[name] = z3.Bool(name)
+                z3_vars[name] = z3.Bool(name, ctx=ctx) if ctx else z3.Bool(name)
             else:
                 raise ValueError(f"Unsupported Z3 variable type: {vtype} for {name}")
         return z3_vars
@@ -85,10 +121,11 @@ class SMTEngine:
         If UNSAT: no counterexample exists within the bounded domain (claim holds).
         """
         timeout = timeout_ms or self.default_timeout_ms
-        solver = z3.Solver()
+        ctx = z3.Context()
+        solver = z3.Solver(ctx=ctx)
         solver.set("timeout", timeout)
 
-        z3_vars = self.create_variables(var_specs)
+        z3_vars = self.create_variables(var_specs, ctx=ctx)
 
         # Assert domain bounds
         for dc in domain_constraints:
@@ -144,10 +181,11 @@ class SMTEngine:
         - If SAT: the step is UNSOUND. The returned model is a concrete counterexample.
         """
         timeout = timeout_ms or self.default_timeout_ms
-        solver = z3.Solver()
+        ctx = z3.Context()
+        solver = z3.Solver(ctx=ctx)
         solver.set("timeout", timeout)
 
-        z3_vars = self.create_variables(var_specs)
+        z3_vars = self.create_variables(var_specs, ctx=ctx)
 
         # Add all premises / hypotheses
         for hyp in hypotheses:

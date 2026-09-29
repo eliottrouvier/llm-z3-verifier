@@ -1,4 +1,4 @@
-.PHONY: help install test demo benchmark mcts ramsey serve bitvectors invariants lean profile clean
+.PHONY: help install test lint demo benchmark mcts ramsey serve bitvectors invariants lean profile clean
 
 PYTHON ?= python3
 
@@ -6,6 +6,7 @@ help:
 	@echo "llm-z3-verifier development commands:"
 	@echo "  make install     Install dependencies in current environment"
 	@echo "  make test        Run all unit tests via pytest"
+	@echo "  make lint        Check syntax of all source and test files"
 	@echo "  make demo        Run all core showcases"
 	@echo "  make benchmark   Run 20-problem neurosymbolic benchmark suite"
 	@echo "  make mcts        Run MCTS proof search with PRM"
@@ -22,6 +23,10 @@ install:
 
 test:
 	$(PYTHON) -m pytest tests/ -v
+
+lint:
+	$(PYTHON) -m py_compile src/*.py tests/*.py
+
 
 demo:
 	$(PYTHON) -m src.cli --demo

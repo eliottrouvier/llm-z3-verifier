@@ -44,3 +44,9 @@ htmlcov/
 
 # Logs & outputs
 *.log
+
+# Type checking & lint caches
+.mypy_cache/
+.ruff_cache/
+*.orig
+*.rej

@@ -64,3 +64,24 @@ def test_proof_chain_early_stopping():
     assert report.sound_steps == 1
     assert report.unsound_steps == 1
     assert len(report.step_reports) == 2  # Fail-fast stopped at step 1
+
+
+def test_verification_report_to_dict():
+    verifier = ProofVerifier()
+    step = ProofStep(
+        step_id=0,
+        text="Valid deduction",
+        variables={"x": "Int"},
+        hypotheses=["x > 0"],
+        conclusion="x >= 1"
+    )
+    report = verifier.verify_proof_chain([step])
+    data = report.to_dict()
+    assert data["total_steps"] == 1
+    assert data["sound_steps"] == 1
+    assert data["unsound_steps"] == 0
+    assert data["overall_valid"] is True
+    assert len(data["steps"]) == 1
+    assert data["steps"][0]["step_id"] == 0
+    assert data["steps"][0]["is_sound"] is True
+

@@ -34,6 +34,26 @@ class VerificationReport:
     overall_valid: bool
     step_reports: List[ProofStep] = field(default_factory=list)
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializes the verification report into a structured dictionary."""
+        return {
+            "total_steps": self.total_steps,
+            "sound_steps": self.sound_steps,
+            "unsound_steps": self.unsound_steps,
+            "overall_valid": self.overall_valid,
+            "steps": [
+                {
+                    "step_id": s.step_id,
+                    "text": s.text,
+                    "status": s.status,
+                    "is_sound": s.is_sound,
+                    "counterexample": s.counterexample,
+                    "time_ms": s.verification_time_ms
+                }
+                for s in self.step_reports
+            ]
+        }
+
 
 class ProofVerifier:
     """Verifies each deduction step in a multi-step proof sequence."""
